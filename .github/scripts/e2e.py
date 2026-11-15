@@ -77,6 +77,28 @@ def center(node):
     return (x1 + x2) // 2, (y1 + y2) // 2
 
 
+def area(node):
+    x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds")))
+    return (x2 - x1) * (y2 - y1)
+
+
+def row_with(sub, root=None):
+    """La fila enfocable más pequeña que contiene el texto: nunca la lista entera."""
+    candidates = [
+        n for n in nodes(root)
+        if n.get("focusable") == "true"
+        and "RecyclerView" not in (n.get("class") or "")
+        and any(sub.lower() in (d.get("text") or "").lower() for d in n.iter("node"))
+    ]
+    if not candidates:
+        raise AssertionError("no hay fila para '%s': %s" % (sub, texts(root)))
+    return min(candidates, key=area)
+
+
+def row_texts(row):
+    return [d.get("text") for d in row.iter("node") if d.get("text")]
+
+
 def tap(node):
     x, y = center(node)
     shell("input tap %d %d" % (x, y))
@@ -220,12 +242,10 @@ def back_to_list():
 def event_with_two_sources():
     back_to_list()
     wait_text("Team A vs Team B", 40)
-    row = [n for n in nodes() if n.get("focusable") == "true" and any(
-        "Team A vs Team B" in (d.get("text") or "") for d in n.iter("node"))]
-    assert row, "no hay fila para Team A vs Team B"
-    row_texts = [d.get("text") for d in row[0].iter("node") if d.get("text")]
-    assert "2 fuentes" in row_texts, "Team A debería tener 2 fuentes: %s" % row_texts
-    assert with_text("1 fuente"), "Team C y Team E deberían tener 1 fuente: %s" % texts()
+    root = dump()
+    assert "2 fuentes" in row_texts(row_with("Team A vs Team B", root)), "Team A debería tener 2 fuentes"
+    assert "1 fuente" in row_texts(row_with("Team C vs Team D", root)), "Team C solo está en el sitio A"
+    assert "1 fuente" in row_texts(row_with("Team E", root)), "Team E solo está en el sitio B"
 
 
 def dpad_focus():
@@ -281,10 +301,8 @@ def pause_first_keeps_event_with_second():
     tap(with_text("Fútbol")[0])
     # Sin el primer host, el evento toma el nombre que da el segundo.
     wait_text("TEAM A - Team B", 40)
-    row = [n for n in nodes() if n.get("focusable") == "true" and any(
-        "team a" in (d.get("text") or "").lower() for d in n.iter("node"))][0]
-    row_texts = [d.get("text") for d in row.iter("node") if d.get("text")]
-    assert "1 fuente" in row_texts, row_texts
+    row = row_with("team a")
+    assert "1 fuente" in row_texts(row), row_texts(row)
     assert not with_text("Team C vs Team D"), "Team C solo está en el host pausado"
     tap(row)
     wait_activity("SourcesActivity")
@@ -305,8 +323,8 @@ def degraded_mode():
     tap(with_text("Fútbol")[0])
     wait_text("Modo degradado", 40)
     wait_text("Sin fuentes vivas")
-    dead = [n for n in nodes() if n.get("focusable") == "true" and any(
-        "Team E" in (d.get("text") or "") for d in n.iter("node"))][0]
+    dead = row_with("Team E")
+    assert "Sin fuentes vivas" in row_texts(dead), row_texts(dead)
     tap(dead)
     time.sleep(2)
     assert "LiveActivity" in resumed(), "un evento sin fuentes vivas no debe abrirse"
