@@ -134,7 +134,8 @@ Cada push a `main` ejecuta:
    y arranque en frío por debajo de 3 s. Las capturas quedan en el artefacto
    `capturas-e2e`.
 
-Una etiqueta `vX.Y.Z` publica además la versión en Releases con todos los APK.
+Para publicar una versión: Actions → Android CI → Run workflow → `version` = `vX.Y.Z`.
+Sale en Releases como `telepropia.apk` (nombre fijo) y `telepropia-vX.Y.Z.apk`.
 
 Las reglas del proyecto están en `CLAUDE.md` y las decisiones en
 `DECISIONS.md`.
