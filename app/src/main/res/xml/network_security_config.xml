@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- El resolver va por HTTP en la LAN y su host lo pone el usuario: <domain> no admite IPs sueltas. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

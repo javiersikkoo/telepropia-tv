@@ -1,0 +1,227 @@
+# Registro de decisiones
+
+Decisiones con alternativa razonable, recortes y ampliaciones de alcance, y
+cambios en el contrato del resolver. Se lee al empezar cada sesión.
+
+Formato: fecha, decisión, alternativa descartada, coste asumido. Cinco líneas
+como máximo por entrada. Lo que rompe el contrato o el alcance se pregunta
+antes de anotarse.
+
+---
+
+## Vigentes
+
+## 2026-11-15 — El alcance no se recorta por criterio de legalidad
+
+La app soporta cualquier fuente aunque no sea estrictamente legal. La licencia
+la decide quien pone la fuente; la app es un cliente y no valida nada.
+
+Alternativa descartada: limitar el proyecto a fuentes "legales". Se descarta
+porque el requisito que manda es no estar acoplado a ninguna fuente.
+
+Coste: el README asume que la fuente puede caer.
+
+## 2026-11-15 — Sin Compose
+
+Vistas XML con el sistema de foco y `nextFocus*`. El foco con mando en TV es
+más predecible que con Compose.
+
+Alternativa descartada: Compose. Coste: más XML y más `findViewById`.
+
+## 2026-11-15 — `PlaybackSpec` no se cachea nunca
+
+Se resuelve en el momento del play. Las URLs del resolver son de sesión y
+caducan; una caché solo produce 403.
+
+Alternativa descartada: caché corta de 30 s. Coste: una petición extra por
+reproducción, y un reintento con re-resolución en cada 403.
+
+## 2026-11-15 — Objetivo primario: Fire Stick 4K
+
+Se desarrolla y se prueba contra Fire Stick 4K. Android TV y Google TV son
+secundarios.
+
+Alternativa descartada: tele Android TV. Coste: hay que vigilar el rendimiento
+en Fire Stick Lite y no usar APIs que Amazon recorte.
+
+## 2026-11-15 — minSdk 21
+
+Fire OS antiguos y Android TV viejos siguen en el parque instalado. Media3 lo
+soporta.
+
+Alternativa descartada: minSdk 23 para ahorrar ramas. Coste: más comprobaciones
+de compatibilidad en reproducción.
+
+## 2026-11-15 — Nada de multiventana ni grabación
+
+Se aparcan grabación, timeshift y PiP hasta que las cuatro fases estén
+cerradas.
+
+Alternativa descartada: incluirlas en F1. Coste: la app sale sin ellas.
+
+---
+
+## Nuevas
+
+## 2026-11-15 — La app es un navegador de partidos, no un cliente IPTV
+
+Una lista de lo que se juega ahora y un botón de play. Fuera Xtream, EPG,
+canales, categorías, estanterías, paginación y búsqueda.
+
+Alternativa descartada: el cliente IPTV de la primera versión del documento.
+Se descarta porque sin panel Xtream ni parrilla, la mitad de ese alcance no se
+usaría nunca para ver deporte.
+
+Coste: no hay parrilla horaria ni navegación por canal; se deroga la entrada
+de EPG desde F1.
+
+## 2026-11-15 — La fuente es un resolver externo, en la LAN
+
+El resolver hace el trabajo sucio del sitio (firma, cifrado, referer,
+segmentos) y expone un JSON. La app consume ese JSON.
+
+Alternativa descartada: reimplementar la cadena en Kotlin. Se descarta porque
+son días de trabajo y obliga a meter criptografía del sitio en el código.
+
+Coste: hace falta una máquina encendida mientras se ve, y un dominio más de
+configuración. El resolver es código ajeno y no se toca.
+
+## 2026-11-15 — La app no conoce ningún sitio; el único dato es el host
+
+Ninguna cadena de dominio en Kotlin. El host del resolver vive en DataStore y
+se edita desde ajustes.
+
+Alternativa descartada: `ExtractorSpec` en Room con selectores y dominios.
+Se descarta porque la app ya no habla con el sitio: no hay selectores que
+guardar.
+
+Coste: sin los sitios dentro, la app no sirve sin un resolver montado. Se
+deroga la entrada de "todo lo específico de una fuente vive en datos".
+
+## 2026-11-15 — Nada de WebView en la app
+
+Ni oculta para extraer, ni visible como reproductor de reserva. Media3 y punto.
+
+Alternativa descartada: WebView a pantalla completa. Funciona, pero en un
+dispositivo sin puntero los anuncios y los controles de la página se vuelven
+inmanejables con D-pad.
+
+Coste: si el resolver falla, no hay plan B dentro de la app.
+
+## 2026-11-15 — Sin caché de catálogo; refresco cada 60 s
+
+La lista de partidos se pide viva al resolver mientras la pantalla está en
+primer plano y al volver del reproductor.
+
+Alternativa descartada: caché de 10 min en Room. Se descarta porque los
+partidos entran y salen en minutos y una lista de hace diez es peor que nada.
+
+Coste: una petición por minuto contra la red local.
+
+## 2026-11-15 — `playableUrl` se reescribe al host configurado
+
+El resolver devuelve `playableUrl` con `localhost` aunque corra en otra
+máquina. Antes de reproducir se sustituye el host por el configurado.
+
+Alternativa descartada: confiar en el valor tal cual. Se descarta porque en el
+Fire Stick `localhost` es el propio stick y no se ve nada.
+
+Coste: una manipulación de URL en el cliente, y hay que respetar la query
+completa al reescribir.
+
+## 2026-11-15 — Se codifica contra fixtures, no contra la web
+
+`fixtures/live.json` y `fixtures/resolve.json` con respuestas reales son la
+verdad de la forma de los datos. No se navega ni se investiga.
+
+Alternativa descartada: dejar que el agente deduzca el contrato del sitio.
+Se descarta porque cada sesión acababa en debate sobre legalidad y sobre
+endpoints en vez de en código.
+
+Coste: los fixtures se quedan viejos si el resolver cambia y hay que
+regenerarlos a mano.
+
+## 2026-11-15 — Sin Leanback por defecto
+
+Una sola pantalla de lista y un reproductor. Vistas normales con foco del
+sistema; Leanback solo si algún día hay filas de verdad.
+
+Alternativa descartada: `BrowseFragment` y compañía. Se descarta porque añade
+dependencia y jerarquía de fragments para pintar una lista plana.
+
+Coste: si el catálogo crece a filas, hay que rehacer la pantalla.
+
+## 2026-11-15 — El reintento con re-resolución entra en F1
+
+§10 lo ponía en F2 pero §8 pide ya el mapeo de 403, que sin re-resolución no
+tiene salida. F1 lo implementa para 403 y 487; F2 conserva el resto de fallos.
+
+Alternativa descartada: dejar el 403 mapeado a un botón que reintenta la misma
+URL caducada. Coste: F2 arranca con menos margen.
+
+## 2026-11-15 — Hora de detección en memoria del ViewModel
+
+`Match` no trae hora. `Map<matchId, hora>` en el ViewModel; se limpia al cambiar
+de deporte y al salir de la pantalla; si un partido falta en una respuesta y
+vuelve, cuenta como nuevo. Etiqueta, no ordena. Alternativa descartada: Room.
+Coste: volver del reproductor reinicia las horas.
+
+## 2026-11-15 — "Sin conexión" se deduce de la excepción
+
+§2 solo permite `INTERNET`, sin `ACCESS_NETWORK_STATE`. DNS, sin ruta o red
+inalcanzable → "Sin conexión"; conexión rechazada o timeout → "Sin respuesta
+del servidor". Alternativa descartada: pedir el permiso. Coste: algún caso
+límite cae en el mensaje vecino.
+
+## 2026-11-15 — Versiones fijadas por compileSdk 34
+
+core-ktx 1.13.1 y Media3 1.4.1; las siguientes piden compileSdk 35.
+Alternativa descartada: subir compileSdk, que contradice §1.
+Coste: no se usan las últimas versiones hasta que cambie §1.
+
+## 2026-11-15 — `keepScreenOn` en la vista, no en el manifest
+
+No existe como atributo de actividad. Va en la vista raíz del reproductor y como
+`FLAG_KEEP_SCREEN_ON`. Alternativa descartada: ninguna válida.
+Coste: ninguno.
+
+## 2026-11-15 — El reproductor se cierra al pasar a segundo plano
+
+`onStop` cierra la actividad; al volver se ve la lista y el siguiente play
+re-resuelve. Alternativa descartada: pausar y reanudar con la misma URL, que
+puede haber caducado. Coste: Home no retoma el partido.
+
+---
+
+## Derogadas
+
+## 2026-11-15 — Derogada: semilla M3U de TDTChannels
+
+Ya no hay lista semilla. Al primer arranque, sin hosts, se abre ajustes con el
+campo vacío y una línea de texto explicando que hace falta el host del resolver.
+
+Alternativa descartada: mantener TDTChannels como relleno. Se descarta porque
+la TDT no tiene deporte que el resolver no dé, y arrancar con una lista que no
+es la que quieres ver solo confunde.
+
+Coste: la app no hace nada útil hasta que se configura un host.
+
+## 2026-11-15 — Derogada: EPG desde F1
+
+Se cae con el recorte a navegador de partidos. Un partido en vivo no tiene
+parrilla horaria.
+
+Alternativa descartada: mantener `getEpg()` en el contrato. Se descarta porque
+el resolver tampoco lo da.
+
+Coste: si algún día se añaden canales 24 h, hay que diseñarlo de cero.
+
+## 2026-11-15 — Derogada: todo lo específico de una fuente vive en datos
+
+Sustituida por "la app no conoce ningún sitio". `ExtractorSpec` y
+`MediaRef.extras` desaparecen; lo específico se queda en el resolver.
+
+Alternativa descartada: conservar la tabla de specs para F3. Se descarta porque
+sin WebView no hay nada que extraer en el cliente.
+
+Coste: la app queda atada a un resolver concreto y a su contrato.

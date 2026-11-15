@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TelePropia</string>
+
+    <string name="live_settings">Ajustes</string>
+    <string name="live_empty">No hay partidos en vivo de este deporte.</string>
+    <string name="live_detected">Detectado a las %1$s</string>
+    <string name="match_content_description">%1$s, detectado a las %2$s</string>
+
+    <string name="error_no_network">Sin conexión</string>
+    <string name="error_timeout">Sin respuesta del servidor</string>
+    <string name="error_expired">El enlace ha caducado</string>
+    <string name="error_not_found">El partido ya no está disponible</string>
+    <string name="error_upstream">La fuente no responde</string>
+    <string name="error_other">No se ha podido reproducir</string>
+    <string name="error_list_other">No se ha podido cargar la lista</string>
+    <string name="error_no_host">Falta el host del resolver. Añádelo en Ajustes.</string>
+
+    <string name="player_retry">Reintentar</string>
+
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_first_run">Hace falta el host del resolver para ver partidos.</string>
+    <string name="settings_host_hint">http://192.168.1.10:3000</string>
+    <string name="settings_add">Añadir</string>
+    <string name="settings_added">Host añadido</string>
+    <string name="settings_duplicate">Ese host ya está en la lista</string>
+    <string name="settings_invalid">Dirección no válida</string>
+    <string name="settings_hosts_title">Hosts del resolver</string>
+    <string name="settings_no_hosts">Todavía no hay hosts.</string>
+
+    <string name="host_primary">Primario</string>
+    <string name="host_make_primary">Hacer primario</string>
+    <string name="host_probe">Probar</string>
+    <string name="host_delete">Borrar</string>
+    <string name="probe_running">Probando…</string>
+    <string name="probe_ok">OK · %1$d ms</string>
+</resources>
