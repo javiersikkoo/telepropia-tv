@@ -3,6 +3,7 @@ name: Android CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -20,6 +21,36 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Clave de firma
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TELEPROPIA_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.TELEPROPIA_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TELEPROPIA_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.TELEPROPIA_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            {
+              echo "TELEPROPIA_KEYSTORE=$RUNNER_TEMP/release.jks"
+              echo "TELEPROPIA_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "TELEPROPIA_KEY_ALIAS=$KEY_ALIAS"
+              echo "TELEPROPIA_KEY_PASSWORD=$KEY_PASSWORD"
+              echo "FIRMA=definitiva"
+            } >> "$GITHUB_ENV"
+          else
+            keytool -genkeypair -keystore "$RUNNER_TEMP/temporal.jks" -alias temporal -keyalg RSA -keysize 2048 \
+              -validity 30 -storepass temporal -keypass temporal -dname "CN=CI temporal" >/dev/null
+            {
+              echo "TELEPROPIA_KEYSTORE=$RUNNER_TEMP/temporal.jks"
+              echo "TELEPROPIA_KEYSTORE_PASSWORD=temporal"
+              echo "TELEPROPIA_KEY_ALIAS=temporal"
+              echo "TELEPROPIA_KEY_PASSWORD=temporal"
+              echo "FIRMA=temporal"
+            } >> "$GITHUB_ENV"
+            echo "::warning::Sin secretos de firma: el release va firmado con una clave temporal del CI."
+          fi
+
       - name: ktlint
         run: ./gradlew ktlintCheck --continue
 
@@ -29,11 +60,12 @@ jobs:
       - name: assembleRelease (con recuento de warnings)
         shell: bash
         run: |
-          ./gradlew assembleRelease assembleDebug --rerun-tasks --warning-mode all 2>&1 | tee build.log
-          echo "## Warnings de compilación" >> "$GITHUB_STEP_SUMMARY"
+          ./gradlew assembleRelease --warning-mode all 2>&1 | tee build.log
+          echo "## Warnings de compilación (firma $FIRMA)" >> "$GITHUB_STEP_SUMMARY"
           grep -E '^w: ' build.log > warnings.txt || true
           if [ -s warnings.txt ]; then cat warnings.txt >> "$GITHUB_STEP_SUMMARY"; else echo "Ninguno" >> "$GITHUB_STEP_SUMMARY"; fi
           echo "Kotlin warnings: $(wc -l < warnings.txt)"
+          ls -la app/build/outputs/apk/release/
 
       - name: SQL de la migración igual que el de Room
         run: python3 .github/scripts/check_room_sql.py
@@ -55,10 +87,80 @@ jobs:
             warnings.txt
             app/build/reports/
             app/build/test-results/
+            app/build/outputs/mapping/
           if-no-files-found: ignore
 
-      - name: APK de prueba
+      - name: APK release
         uses: actions/upload-artifact@v4
         with:
-          name: telepropia-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: telepropia-release-firma-${{ env.FIRMA }}
+          path: app/build/outputs/apk/release/*.apk
+
+  e2e:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: telepropia-release-firma-*
+          path: apk
+          merge-multiple: true
+
+      - name: KVM para el emulador
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Vídeo HLS de prueba
+        run: |
+          command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+          mkdir -p "$RUNNER_TEMP/hls"
+          ffmpeg -loglevel error -f lavfi -i testsrc=size=640x360:rate=25 -t 600 -c:v libx264 -preset veryfast \
+            -pix_fmt yuv420p -g 50 -f hls -hls_time 2 -hls_list_size 0 \
+            -hls_segment_filename "$RUNNER_TEMP/hls/seg%03d.ts" "$RUNNER_TEMP/hls/index.m3u8"
+          ls "$RUNNER_TEMP/hls" | wc -l
+          ls apk
+
+      - name: Emulador Android TV y recorrido completo
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: android-tv
+          arch: x86
+          profile: tv_1080p
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: python3 .github/scripts/e2e.py "$(ls apk/*universal*.apk)" "$RUNNER_TEMP/hls" "$RUNNER_TEMP/capturas"
+
+      - name: Capturas del recorrido
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-e2e
+          path: ${{ runner.temp }}/capturas
+          if-no-files-found: ignore
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: telepropia-release-firma-*
+          path: apk
+          merge-multiple: true
+
+      - name: Publicar versión
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp apk/app-universal-release.apk "apk/telepropia-${GITHUB_REF_NAME}.apk"
+          gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --title "TelePropia $GITHUB_REF_NAME" \
+            --generate-notes "apk/telepropia-${GITHUB_REF_NAME}.apk" apk/app-*-release.apk

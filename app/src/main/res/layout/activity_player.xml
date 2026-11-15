@@ -22,6 +22,7 @@
 
     <TextView
         android:id="@+id/status_text"
+        android:accessibilityLiveRegion="polite"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -41,6 +42,7 @@
 
         <TextView
             android:id="@+id/error_text"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"

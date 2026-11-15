@@ -279,6 +279,46 @@ El vector daba aviso de tamaño y en Fire OS el banner sale recortado o con
 bandas. PNG de 320×180 px en `drawable-xhdpi`, con el nombre de la app.
 Alternativa descartada: vector. Coste: un binario en el repo.
 
+## 2026-11-15 — F3 y F4 se cierran antes de probar F1 en el aparato
+
+Petición expresa: acabar la app entera y probar después. El riesgo de depurar
+varias capas a la vez se acota con el E2E en emulador del CI.
+Alternativa descartada: F1 en el Fire Stick antes de seguir. Coste: si algo
+falla en el aparato, puede venir de cualquier fase.
+
+## 2026-11-15 — E2E en emulador Android TV con resolvers falsos
+
+El CI instala el release minificado en un emulador TV (API 30) y recorre la app
+con el mando contra dos resolvers falsos que cumplen §5 y sirven HLS real.
+Alternativa descartada: fiarlo todo a la prueba manual. Coste: un emulador no
+es un Fire Stick; §11 sigue pidiendo la prueba en el aparato.
+
+## 2026-11-15 — Arranque en frío medido en el emulador
+
+`reportFullyDrawn()` al pintar el primer estado de la lista; el CI toma la
+mediana de 5 arranques con `am start -W` y falla por encima de 3 s.
+Alternativa descartada: medir solo a mano. Coste: el emulador x86 no tiene el
+rendimiento del stick; la cifra del Fire Stick queda pendiente.
+
+## 2026-11-15 — Splits por ABI sin código nativo
+
+§10 los pide, pero ninguna dependencia trae `.so`: los APK por ABI salen
+iguales que el universal. Se generan igualmente y Downloader usa el universal.
+Alternativa descartada: no dividir. Coste: artefactos repetidos.
+
+## 2026-11-15 — Firma por variables de entorno; temporal si faltan
+
+La clave vive en `keystore.properties` (local) o en secretos de GitHub (CI).
+Sin secretos, el CI firma con una clave temporal y lo dice en el nombre del
+artefacto. Alternativa descartada: clave en el repo. Coste: dar de alta cuatro
+secretos a mano; desde esta sesión no se puede.
+
+## 2026-11-15 — Instalación servida desde el PC de los resolvers
+
+El repo es privado: Downloader no puede bajar de GitHub. El README sirve el APK
+con `python3 -m http.server` en la LAN. Alternativa descartada: alojar el APK
+en público. Coste: un paso más en cada actualización.
+
 ---
 
 ## Derogadas

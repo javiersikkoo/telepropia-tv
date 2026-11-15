@@ -100,6 +100,8 @@ class PlayerActivity : AppCompatActivity() {
         retryButton = findViewById(R.id.retry_button)
 
         retryButton.setOnClickListener { viewModel.retry() }
+        playerView.contentDescription =
+            getString(R.string.player_content_description, intent.getStringExtra(EXTRA_NAME).orEmpty())
         onBackPressedDispatcher.addCallback(this) { finish() }
 
         player = ExoPlayer.Builder(this).build().also {
@@ -172,6 +174,7 @@ class PlayerActivity : AppCompatActivity() {
 
     companion object {
         private const val EXTRA_HOST_ID = "host_id"
+        private const val EXTRA_NAME = "name"
         private const val EXTRA_MATCH_ID = "match_id"
         private const val EXTRA_SPORT_ID = "sport_id"
         private const val NO_TOKEN = -1
@@ -179,9 +182,10 @@ class PlayerActivity : AppCompatActivity() {
         private const val TIMEOUT_MS = 8_000
         private const val LOAD_RETRIES = 2
 
-        fun intent(context: Context, hostId: Long, matchId: String, sportId: Int): Intent =
+        fun intent(context: Context, hostId: Long, matchId: String, sportId: Int, name: String): Intent =
             Intent(context, PlayerActivity::class.java)
                 .putExtra(EXTRA_HOST_ID, hostId)
+                .putExtra(EXTRA_NAME, name)
                 .putExtra(EXTRA_MATCH_ID, matchId)
                 .putExtra(EXTRA_SPORT_ID, sportId)
     }

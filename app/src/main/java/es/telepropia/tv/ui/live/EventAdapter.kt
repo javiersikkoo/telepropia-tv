@@ -15,6 +15,13 @@ import java.util.Date
 
 class EventAdapter(private val onOpen: (LiveEvent) -> Unit) : ListAdapter<EventRow, EventAdapter.Holder>(EventDiff) {
 
+    var upTargetId: Int = View.NO_ID
+        set(value) {
+            if (field == value) return
+            field = value
+            if (itemCount > 0) notifyItemChanged(0)
+        }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_event, parent, false)
         return Holder(view, onOpen)
@@ -22,6 +29,7 @@ class EventAdapter(private val onOpen: (LiveEvent) -> Unit) : ListAdapter<EventR
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         holder.bind(getItem(position))
+        holder.itemView.nextFocusUpId = if (position == 0) upTargetId else View.NO_ID
     }
 
     class Holder(view: View, private val onOpen: (LiveEvent) -> Unit) : RecyclerView.ViewHolder(view) {

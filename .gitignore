@@ -7,3 +7,8 @@ local.properties
 captures/
 *.jks
 *.keystore
+
+# Firma de release: nunca al repo
+keystore.properties
+*.jks
+*.keystore

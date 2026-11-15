@@ -3,7 +3,7 @@
     <string name="app_name">TelePropia</string>
 
     <string name="live_settings">Ajustes</string>
-    <string name="live_empty">No hay partidos en vivo de este deporte.</string>
+    <string name="live_empty">No hay nada de %1$s en vivo ahora mismo.\nSe vuelve a mirar cada minuto.</string>
     <string name="live_detected">Detectado a las %1$s</string>
     <plurals name="live_degraded">
         <item quantity="one">Modo degradado: %1$d de %2$d hosts sin respuesta. Sus eventos se marcan y no se abren.</item>
@@ -18,6 +18,15 @@
 
     <string name="sources_pick">Elige fuente</string>
     <string name="source_label">Fuente %1$d · %2$s</string>
+    <string name="source_content_description">Fuente %1$d, %2$s. Pulsa para reproducir.</string>
+    <string name="player_content_description">Reproduciendo %1$s</string>
+    <string name="cd_host_probe">Probar %1$s</string>
+    <string name="cd_host_pause">Pausar %1$s</string>
+    <string name="cd_host_resume">Activar %1$s</string>
+    <string name="cd_host_label">Cambiar etiqueta de %1$s</string>
+    <string name="cd_host_up">Subir %1$s en la lista</string>
+    <string name="cd_host_down">Bajar %1$s en la lista</string>
+    <string name="cd_host_delete">Borrar %1$s</string>
 
     <string name="error_no_network">Sin conexión</string>
     <string name="error_timeout">Sin respuesta del servidor</string>

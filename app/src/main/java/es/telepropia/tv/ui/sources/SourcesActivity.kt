@@ -37,7 +37,7 @@ class SourcesActivity : AppCompatActivity() {
         val list: RecyclerView = findViewById(R.id.source_list)
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = SourceAdapter(items) { item ->
-            startActivity(PlayerActivity.intent(this, item.hostId, item.matchId, sportId))
+            startActivity(PlayerActivity.intent(this, item.hostId, item.matchId, sportId, name))
         }
         list.post { list.getChildAt(0)?.requestFocus() }
     }
@@ -58,6 +58,8 @@ class SourcesActivity : AppCompatActivity() {
             val item = items[position]
             val context = holder.itemView.context
             holder.name.text = context.getString(R.string.source_label, position + 1, item.sourceName)
+            holder.itemView.contentDescription =
+                context.getString(R.string.source_content_description, position + 1, item.sourceName)
             holder.itemView.setOnClickListener { onPick(item) }
         }
 

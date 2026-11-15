@@ -34,6 +34,9 @@ class LiveActivity : AppCompatActivity() {
     private lateinit var loading: ProgressBar
     private lateinit var refreshing: ProgressBar
     private lateinit var message: TextView
+    private lateinit var messagePanel: View
+    private lateinit var retryButton: View
+    private var fullyDrawnReported = false
     private lateinit var banner: TextView
     private val adapter = EventAdapter { event -> openSources(event) }
     private val sportViews = mutableMapOf<Int, View>()
@@ -46,6 +49,9 @@ class LiveActivity : AppCompatActivity() {
         loading = findViewById(R.id.loading)
         refreshing = findViewById(R.id.refreshing)
         message = findViewById(R.id.message)
+        messagePanel = findViewById(R.id.message_panel)
+        retryButton = findViewById(R.id.list_retry)
+        retryButton.setOnClickListener { viewModel.refresh() }
         banner = findViewById(R.id.degraded_banner)
 
         list.layoutManager = LinearLayoutManager(this)
@@ -86,6 +92,8 @@ class LiveActivity : AppCompatActivity() {
                 launch {
                     viewModel.activeSportId.collect { active ->
                         sportViews.forEach { (id, view) -> view.isSelected = id == active }
+                        // Subir desde el primer evento vuelve al deporte elegido, no al primer chip de la fila.
+                        adapter.upTargetId = sportViews[active]?.id ?: View.NO_ID
                     }
                 }
                 launch { viewModel.state.collect { render(it) } }
@@ -107,14 +115,15 @@ class LiveActivity : AppCompatActivity() {
     private fun render(state: LiveState) {
         loading.isVisible = state is LiveState.Loading
         list.isVisible = state is LiveState.Content
-        message.isVisible = state is LiveState.Empty || state is LiveState.Error
+        messagePanel.isVisible = state is LiveState.Empty || state is LiveState.Error
+        retryButton.isVisible = state is LiveState.Error
         when (state) {
             is LiveState.Content -> {
                 adapter.submitList(state.rows)
                 showDegraded(state.degraded)
             }
             is LiveState.Empty -> {
-                message.setText(R.string.live_empty)
+                message.text = getString(R.string.live_empty, activeSportLabel())
                 showDegraded(state.degraded)
             }
             is LiveState.Error -> {
@@ -123,7 +132,15 @@ class LiveActivity : AppCompatActivity() {
             }
             LiveState.Loading -> showDegraded(null)
         }
+        // Marca el fin del arranque en frío para medirlo con `am start -W` y en el CI.
+        if (state !is LiveState.Loading && !fullyDrawnReported) {
+            fullyDrawnReported = true
+            reportFullyDrawn()
+        }
     }
+
+    private fun activeSportLabel(): String =
+        viewModel.sports.firstOrNull { it.id == viewModel.activeSportId.value }?.label.orEmpty()
 
     private fun showDegraded(degraded: Degraded?) {
         banner.isVisible = degraded != null

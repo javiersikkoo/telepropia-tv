@@ -86,6 +86,15 @@ class HostAdapter(private val actions: Actions) : ListAdapter<HostRow, HostAdapt
                 }
             }
 
+            val who = row.displayName
+            probeButton.contentDescription = context.getString(R.string.cd_host_probe, who)
+            stateButton.contentDescription =
+                context.getString(if (active) R.string.cd_host_pause else R.string.cd_host_resume, who)
+            labelButton.contentDescription = context.getString(R.string.cd_host_label, who)
+            upButton.contentDescription = context.getString(R.string.cd_host_up, who)
+            downButton.contentDescription = context.getString(R.string.cd_host_down, who)
+            deleteButton.contentDescription = context.getString(R.string.cd_host_delete, who)
+
             probeButton.setOnClickListener { actions.onProbe(host) }
             stateButton.setOnClickListener { actions.onToggleState(host) }
             labelButton.setOnClickListener { actions.onEditLabel(host) }
