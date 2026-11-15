@@ -15,7 +15,7 @@ class FixturesTest {
     @Test
     fun `live json se parsea a partidos`() {
         val dto = ResolverJson.decodeFromString(LiveResponseDto.serializer(), fixture("live.json"))
-        val matches = dto.matches.map { it.toModel() }
+        val matches = dto.matches.map { it.toModel(hostId = 7L, sourceName = "192.168.1.10:3000") }
         assertEquals(1, matches.size)
         assertEquals("4331876", matches[0].matchId)
         assertEquals(1, matches[0].sportId)

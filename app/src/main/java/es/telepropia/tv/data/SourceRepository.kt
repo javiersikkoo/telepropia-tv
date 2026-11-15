@@ -7,7 +7,9 @@ import es.telepropia.tv.data.local.SettingsStore
 import es.telepropia.tv.data.local.SourceHostEntity
 import es.telepropia.tv.data.local.toModel
 import es.telepropia.tv.data.model.Failure
-import es.telepropia.tv.data.model.Match
+import es.telepropia.tv.data.model.HostFetch
+import es.telepropia.tv.data.model.HostState
+import es.telepropia.tv.data.model.HostStatus
 import es.telepropia.tv.data.model.Outcome
 import es.telepropia.tv.data.model.PlaybackSpec
 import es.telepropia.tv.data.model.SourceHealth
@@ -16,8 +18,7 @@ import es.telepropia.tv.data.model.Sports
 import es.telepropia.tv.data.remote.HostUrls
 import es.telepropia.tv.data.remote.ResolverClient
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 
 sealed interface AddHostResult {
     data class Added(val host: SourceHost) : AddHostResult
@@ -31,8 +32,13 @@ class SourceRepository(
     private val resolver: ResolverClient
 ) {
     private val dao = db.hostDao()
+    private val clock: () -> Long = SystemClock::elapsedRealtime
+    private val pauses = HostPauses()
+    private val aggregator = LiveAggregator(resolver::live, pauses, clock)
 
-    val hosts: Flow<List<SourceHost>> = dao.observeAll().map { rows -> rows.map { it.toModel() } }
+    val hostStatuses: Flow<List<HostStatus>> = combine(dao.observeAll(), pauses.current) { rows, paused ->
+        rows.map { it.toModel() }.primaryFirst().map { HostStatus(it, paused[it.id]?.failure) }
+    }
 
     val activeSportId: Flow<Int> = settings.activeSportId
 
@@ -44,14 +50,16 @@ class SourceRepository(
         val baseUrl = HostUrls.normalize(raw) ?: return AddHostResult.Invalid
         val id = dao.insert(SourceHostEntity(baseUrl = baseUrl, isPrimary = false))
         if (id == -1L) return AddHostResult.Duplicate
-        if (dao.primary() == null) setPrimary(id)
+        if (dao.primary() == null) dao.markPrimary(id)
         val host = dao.byId(id)?.toModel() ?: return AddHostResult.Invalid
         return AddHostResult.Added(host)
     }
 
-    suspend fun setPrimary(id: Long) {
-        dao.markPrimary(id)
-        settings.setActiveHost(id)
+    suspend fun setPrimary(id: Long) = dao.markPrimary(id)
+
+    suspend fun setState(id: Long, state: HostState) {
+        dao.setState(id, state.name)
+        if (state == HostState.ACTIVE) pauses.resume(id)
     }
 
     suspend fun deleteHost(id: Long) {
@@ -60,35 +68,32 @@ class SourceRepository(
             dao.delete(id)
             if (wasPrimary) dao.all().firstOrNull()?.let { dao.markPrimary(it.id) }
         }
-        settings.setActiveHost(dao.primary()?.id)
+        pauses.resume(id)
+        aggregator.forget(id)
     }
 
-    suspend fun listLive(sportId: Int): Outcome<List<Match>> {
-        val host = activeHost() ?: return Outcome.Err(Failure.NoHost)
-        return resolver.live(host.baseUrl, sportId)
-    }
+    suspend fun fetchLive(sportId: Int): Outcome<HostFetch> =
+        aggregator.fetch(dao.all().map { it.toModel() }, sportId)
 
-    // PlaybackSpec no se guarda en ningún sitio: cada play pasa por aquí.
-    suspend fun resolve(matchId: String, sportId: Int): Outcome<PlaybackSpec> {
-        val host = activeHost() ?: return Outcome.Err(Failure.NoHost)
+    // PlaybackSpec no se guarda en ningún sitio: cada play pasa por aquí, y siempre contra el host de la fuente.
+    suspend fun resolve(hostId: Long, matchId: String, sportId: Int): Outcome<PlaybackSpec> {
+        val host = dao.byId(hostId)?.toModel() ?: return Outcome.Err(Failure.NoHost)
         return resolver.resolve(host.baseUrl, matchId, sportId)
     }
 
     suspend fun probe(host: SourceHost): SourceHealth {
-        val started = SystemClock.elapsedRealtime()
-        val outcome = resolver.live(host.baseUrl, Sports.PROBE_ID)
-        val latency = SystemClock.elapsedRealtime() - started
+        val started = clock()
+        val outcome = resolver.live(host, Sports.PROBE_ID)
+        val latency = clock() - started
         return when (outcome) {
-            is Outcome.Ok -> SourceHealth(ok = true, latencyMs = latency, failure = null)
-            is Outcome.Err -> SourceHealth(ok = false, latencyMs = latency, failure = outcome.failure)
+            is Outcome.Ok -> {
+                pauses.resume(host.id)
+                SourceHealth(ok = true, latencyMs = latency, failure = null)
+            }
+            is Outcome.Err -> {
+                if (host.state == HostState.ACTIVE) pauses.pause(host.id, outcome.failure, clock())
+                SourceHealth(ok = false, latencyMs = latency, failure = outcome.failure)
+            }
         }
-    }
-
-    private suspend fun activeHost(): SourceHost? {
-        val all = dao.all().map { it.toModel() }
-        val activeId = settings.activeHostId.first()
-        return all.firstOrNull { it.id == activeId }
-            ?: all.firstOrNull { it.isPrimary }
-            ?: all.firstOrNull()
     }
 }

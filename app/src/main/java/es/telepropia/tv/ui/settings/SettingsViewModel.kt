@@ -9,6 +9,8 @@ import es.telepropia.tv.AppContainer
 import es.telepropia.tv.R
 import es.telepropia.tv.data.AddHostResult
 import es.telepropia.tv.data.SourceRepository
+import es.telepropia.tv.data.model.HostState
+import es.telepropia.tv.data.model.HostStatus
 import es.telepropia.tv.data.model.SourceHealth
 import es.telepropia.tv.data.model.SourceHost
 import es.telepropia.tv.domain.ProbeSource
@@ -27,7 +29,9 @@ sealed interface ProbeUi {
     data class Done(val health: SourceHealth) : ProbeUi
 }
 
-data class HostRow(val host: SourceHost, val probe: ProbeUi)
+data class HostRow(val status: HostStatus, val probe: ProbeUi) {
+    val host: SourceHost get() = status.host
+}
 
 data class Feedback(@StringRes val textRes: Int, val clearInput: Boolean)
 
@@ -38,8 +42,8 @@ class SettingsViewModel(
 
     private val probes = MutableStateFlow<Map<Long, ProbeUi>>(emptyMap())
 
-    val rows: StateFlow<List<HostRow>> = combine(repository.hosts, probes) { hosts, results ->
-        hosts.map { HostRow(it, results[it.id] ?: ProbeUi.Idle) }
+    val rows: StateFlow<List<HostRow>> = combine(repository.hostStatuses, probes) { statuses, results ->
+        statuses.map { HostRow(it, results[it.host.id] ?: ProbeUi.Idle) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     private val _feedback = MutableStateFlow<Feedback?>(null)
@@ -64,6 +68,12 @@ class SettingsViewModel(
 
     fun setPrimary(host: SourceHost) {
         viewModelScope.launch { repository.setPrimary(host.id) }
+    }
+
+    fun toggleState(host: SourceHost) {
+        val next = if (host.state == HostState.ACTIVE) HostState.PAUSED else HostState.ACTIVE
+        probes.update { it - host.id }
+        viewModelScope.launch { repository.setState(host.id, next) }
     }
 
     fun delete(host: SourceHost) {

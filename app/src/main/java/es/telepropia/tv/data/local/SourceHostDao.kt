@@ -32,4 +32,7 @@ interface SourceHostDao {
 
     @Query("UPDATE source_host SET isPrimary = CASE WHEN id = :id THEN 1 ELSE 0 END")
     suspend fun markPrimary(id: Long)
+
+    @Query("UPDATE source_host SET state = :state WHERE id = :id")
+    suspend fun setState(id: Long, state: String)
 }

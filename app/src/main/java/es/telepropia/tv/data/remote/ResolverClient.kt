@@ -4,6 +4,7 @@ import es.telepropia.tv.data.model.Failure
 import es.telepropia.tv.data.model.Match
 import es.telepropia.tv.data.model.Outcome
 import es.telepropia.tv.data.model.PlaybackSpec
+import es.telepropia.tv.data.model.SourceHost
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
@@ -14,10 +15,13 @@ import okhttp3.Request
 
 class ResolverClient(private val http: OkHttpClient = defaultHttpClient()) {
 
-    suspend fun live(baseUrl: String, sportId: Int): Outcome<List<Match>> =
-        get(baseUrl, "api/live", listOf("sportType" to sportId.toString())) { body ->
-            ResolverJson.decodeFromString(LiveResponseDto.serializer(), body).matches.map { it.toModel() }
+    suspend fun live(host: SourceHost, sportId: Int): Outcome<List<Match>> {
+        val sourceName = HostUrls.label(host.baseUrl)
+        return get(host.baseUrl, "api/live", listOf("sportType" to sportId.toString())) { body ->
+            ResolverJson.decodeFromString(LiveResponseDto.serializer(), body).matches
+                .map { it.toModel(host.id, sourceName) }
         }
+    }
 
     suspend fun resolve(baseUrl: String, matchId: String, sportId: Int): Outcome<PlaybackSpec> =
         get(baseUrl, "api/resolve", listOf("matchId" to matchId, "sportType" to sportId.toString())) { body ->

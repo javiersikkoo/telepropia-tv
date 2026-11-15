@@ -12,5 +12,6 @@ fun Failure.messageRes(@StringRes otherRes: Int = R.string.error_other): Int = w
     Failure.NotFound -> R.string.error_not_found
     Failure.Upstream -> R.string.error_upstream
     Failure.NoHost -> R.string.error_no_host
+    Failure.NoActiveHost -> R.string.error_no_active_host
     Failure.Other -> otherRes
 }

@@ -17,10 +17,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import es.telepropia.tv.R
 import es.telepropia.tv.appContainer
-import es.telepropia.tv.data.model.Match
+import es.telepropia.tv.data.model.LiveEvent
 import es.telepropia.tv.ui.messageRes
-import es.telepropia.tv.ui.player.PlayerActivity
 import es.telepropia.tv.ui.settings.SettingsActivity
+import es.telepropia.tv.ui.sources.SourcesActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -32,17 +32,21 @@ class LiveActivity : AppCompatActivity() {
     private lateinit var sportRow: LinearLayout
     private lateinit var list: RecyclerView
     private lateinit var loading: ProgressBar
+    private lateinit var refreshing: ProgressBar
     private lateinit var message: TextView
-    private val adapter = MatchAdapter { match -> openPlayer(match) }
+    private lateinit var banner: TextView
+    private val adapter = EventAdapter { event -> openSources(event) }
     private val sportViews = mutableMapOf<Int, View>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live)
         sportRow = findViewById(R.id.sport_row)
-        list = findViewById(R.id.match_list)
+        list = findViewById(R.id.event_list)
         loading = findViewById(R.id.loading)
+        refreshing = findViewById(R.id.refreshing)
         message = findViewById(R.id.message)
+        banner = findViewById(R.id.degraded_banner)
 
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = adapter
@@ -69,7 +73,7 @@ class LiveActivity : AppCompatActivity() {
             val chip = inflater.inflate(R.layout.item_sport, sportRow, false) as TextView
             chip.id = View.generateViewId()
             chip.text = sport.label
-            chip.nextFocusDownId = R.id.match_list
+            chip.nextFocusDownId = R.id.event_list
             chip.setOnClickListener { viewModel.selectSport(sport.id) }
             sportRow.addView(chip)
             sportViews[sport.id] = chip
@@ -86,6 +90,11 @@ class LiveActivity : AppCompatActivity() {
                 }
                 launch { viewModel.state.collect { render(it) } }
                 launch {
+                    viewModel.refreshing.collect { busy ->
+                        refreshing.visibility = if (busy && !loading.isVisible) View.VISIBLE else View.INVISIBLE
+                    }
+                }
+                launch {
                     while (isActive) {
                         viewModel.refresh()
                         delay(REFRESH_INTERVAL_MS)
@@ -100,10 +109,26 @@ class LiveActivity : AppCompatActivity() {
         list.isVisible = state is LiveState.Content
         message.isVisible = state is LiveState.Empty || state is LiveState.Error
         when (state) {
-            is LiveState.Content -> adapter.submitList(state.rows)
-            LiveState.Empty -> message.setText(R.string.live_empty)
-            is LiveState.Error -> message.setText(state.failure.messageRes(R.string.error_list_other))
-            LiveState.Loading -> Unit
+            is LiveState.Content -> {
+                adapter.submitList(state.rows)
+                showDegraded(state.degraded)
+            }
+            is LiveState.Empty -> {
+                message.setText(R.string.live_empty)
+                showDegraded(state.degraded)
+            }
+            is LiveState.Error -> {
+                message.setText(state.failure.messageRes(R.string.error_list_other))
+                showDegraded(null)
+            }
+            LiveState.Loading -> showDegraded(null)
+        }
+    }
+
+    private fun showDegraded(degraded: Degraded?) {
+        banner.isVisible = degraded != null
+        if (degraded != null) {
+            banner.text = getString(R.string.live_degraded, degraded.failing, degraded.active)
         }
     }
 
@@ -115,8 +140,8 @@ class LiveActivity : AppCompatActivity() {
         }
     }
 
-    private fun openPlayer(match: Match) {
-        startActivity(PlayerActivity.intent(this, match))
+    private fun openSources(event: LiveEvent) {
+        startActivity(SourcesActivity.intent(this, event))
     }
 
     private companion object {

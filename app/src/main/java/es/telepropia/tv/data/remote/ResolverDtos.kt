@@ -33,4 +33,10 @@ internal data class ResolveResponseDto(
     val playableUrl: String
 )
 
-internal fun MatchDto.toModel(): Match = Match(matchId = matchId, sportId = sportType, name = name)
+internal fun MatchDto.toModel(hostId: Long, sourceName: String): Match = Match(
+    matchId = matchId,
+    sportId = sportType,
+    name = name,
+    sourceHostId = hostId,
+    sourceName = sourceName
+)

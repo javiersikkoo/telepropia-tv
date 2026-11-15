@@ -5,6 +5,7 @@
     <color name="selected">#FF2D3340</color>
     <color name="focus_fill">#FF24375C</color>
     <color name="accent">#FF3D7BFF</color>
+    <color name="warning">#FFFFB74D</color>
     <color name="text">#FFF2F2F2</color>
     <color name="text_secondary">#FFA0A4AD</color>
     <color name="black">#FF000000</color>

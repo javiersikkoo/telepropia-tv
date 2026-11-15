@@ -8,15 +8,27 @@
     android:orientation="horizontal"
     android:padding="12dp">
 
-    <TextView
-        android:id="@+id/host_url"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:ellipsize="middle"
-        android:maxLines="1"
-        android:textColor="@color/text"
-        android:textSize="20sp" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/host_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:singleLine="true"
+            android:textColor="@color/text"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/host_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/probe_result"
@@ -33,6 +45,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/host_probe" />
+
+    <Button
+        android:id="@+id/state_button"
+        style="@style/Widget.TelePropia.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp" />
 
     <Button
         android:id="@+id/primary_button"

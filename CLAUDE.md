@@ -61,9 +61,9 @@ HTTP ni Room.
 
 ```
 Sport(id: Int, label: String)
-Match(matchId: String, sportId: Int, name: String)
+Match(matchId: String, sportId: Int, name: String, sourceHostId: Long, sourceName: String)
 PlaybackSpec(url: String, referer: String?)
-SourceHost(id: Long, baseUrl: String, isPrimary: Boolean)
+SourceHost(id: Long, baseUrl: String, isPrimary: Boolean, state: ACTIVE|PAUSED)
 SourceHealth(ok: Boolean, latencyMs: Long, failure: Failure?)
 ```
 
@@ -117,8 +117,10 @@ Deportes: 1 fútbol, 2 baloncesto, 3 tenis, 4 béisbol, 6 críquet, 7 motor,
 
 ## §7 Pantallas
 
-1. **Partidos en vivo.** Filtro por deporte arriba, lista debajo. Nombre y hora
-   de detección. Refresco automático. Estado vacío propio.
+1. **Partidos en vivo.** Filtro por deporte arriba, lista debajo, agrupada por
+   evento. Nombre y hora de detección. Cada evento abre sus fuentes y se elige
+   fuente. Un evento sin fuentes vivas se marca y no se puede abrir. Refresco
+   automático. Estado vacío propio.
 2. **Reproductor.**
 3. **Ajustes.** Lista de hosts, alta, borrado, marcar primario, botón probar.
 
@@ -144,12 +146,15 @@ Mapeo obligatorio, en español, sin códigos ni trazas en pantalla:
 Cortar la red en mitad de la reproducción tiene que mostrar "Sin respuesta del
 servidor", no un diálogo del sistema ni un cierre.
 
-## §9 Fuentes múltiples
+## §9 Fuentes múltiples: agregación
 
-Se pueden dar de alta varios hosts. El primario se usa primero. Si el primario
-falla en `probe()` o en `resolve()`, se pasa al siguiente en el orden de la
-lista y se avisa con un brindis de una línea. Volver a ajustes y reordenar
-recupera el primario.
+Se pueden dar de alta varios hosts, cada uno `ACTIVE` o `PAUSED`. La lista se
+pide a todos los hosts activos en paralelo y se fusiona por nombre y deporte
+normalizados en eventos. No se deduplica a una fila: cada host que da el evento
+aparece como fuente propia dentro de él.
+
+El host que falla se pausa en memoria y se excluye, sin borrarse. `resolve()`
+va siempre al host de la fuente elegida.
 
 Dar de alta un segundo host no puede requerir recompilar.
 

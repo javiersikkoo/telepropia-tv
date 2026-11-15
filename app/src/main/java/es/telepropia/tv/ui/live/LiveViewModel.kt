@@ -7,11 +7,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import es.telepropia.tv.AppContainer
 import es.telepropia.tv.data.SourceRepository
 import es.telepropia.tv.data.model.Failure
-import es.telepropia.tv.data.model.Match
+import es.telepropia.tv.data.model.LiveEvent
+import es.telepropia.tv.data.model.LiveSnapshot
 import es.telepropia.tv.data.model.Outcome
 import es.telepropia.tv.data.model.Sport
 import es.telepropia.tv.data.model.Sports
-import es.telepropia.tv.domain.ListLiveMatches
+import es.telepropia.tv.domain.ListLiveEvents
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,18 +22,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class LiveRow(val match: Match, val detectedAt: Long)
+data class EventRow(val event: LiveEvent, val detectedAt: Long)
+
+data class Degraded(val failing: Int, val active: Int)
 
 sealed interface LiveState {
     data object Loading : LiveState
-    data object Empty : LiveState
-    data class Content(val rows: List<LiveRow>) : LiveState
+    data class Empty(val degraded: Degraded?) : LiveState
+    data class Content(val rows: List<EventRow>, val degraded: Degraded?) : LiveState
     data class Error(val failure: Failure) : LiveState
 }
 
 class LiveViewModel(
     private val repository: SourceRepository,
-    private val listLiveMatches: ListLiveMatches,
+    private val listLiveEvents: ListLiveEvents,
     private val clock: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
 
@@ -43,6 +46,9 @@ class LiveViewModel(
 
     private val _state = MutableStateFlow<LiveState>(LiveState.Loading)
     val state: StateFlow<LiveState> = _state.asStateFlow()
+
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
     // Solo etiqueta, no ordena. Vive en memoria: se pierde al cambiar de deporte y al salir de la pantalla.
     private val firstSeen = HashMap<String, Long>()
@@ -58,11 +64,16 @@ class LiveViewModel(
     fun refresh(sportId: Int? = null) {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            val id = sportId ?: repository.activeSportId.first()
-            if (_state.value !is LiveState.Content) _state.value = LiveState.Loading
-            _state.value = when (val outcome = listLiveMatches(id)) {
-                is Outcome.Ok -> toState(outcome.value)
-                is Outcome.Err -> LiveState.Error(outcome.failure)
+            _refreshing.value = true
+            try {
+                val id = sportId ?: repository.activeSportId.first()
+                if (_state.value is LiveState.Error) _state.value = LiveState.Loading
+                _state.value = when (val outcome = listLiveEvents(id)) {
+                    is Outcome.Ok -> toState(outcome.value)
+                    is Outcome.Err -> LiveState.Error(outcome.failure)
+                }
+            } finally {
+                _refreshing.value = false
             }
         }
     }
@@ -73,24 +84,26 @@ class LiveViewModel(
 
     suspend fun needsSetup(): Boolean = !repository.hasHosts()
 
-    private fun toState(matches: List<Match>): LiveState {
-        if (matches.isEmpty()) {
+    private fun toState(snapshot: LiveSnapshot): LiveState {
+        val degraded = if (snapshot.degraded) {
+            Degraded(failing = snapshot.failingHosts.size, active = snapshot.activeHostCount)
+        } else {
+            null
+        }
+        if (snapshot.events.isEmpty()) {
             firstSeen.clear()
-            return LiveState.Empty
+            return LiveState.Empty(degraded)
         }
         val now = clock()
-        val present = matches.map { it.matchId }.toSet()
-        // Un partido que desaparece y vuelve cuenta como nuevo.
-        firstSeen.keys.retainAll(present)
-        val rows = matches.map { match ->
-            LiveRow(match, firstSeen.getOrPut(match.matchId) { now })
-        }
-        return LiveState.Content(rows)
+        // Un evento que desaparece y vuelve cuenta como nuevo.
+        firstSeen.keys.retainAll(snapshot.events.map { it.key }.toSet())
+        val rows = snapshot.events.map { EventRow(it, firstSeen.getOrPut(it.key) { now }) }
+        return LiveState.Content(rows, degraded)
     }
 
     companion object {
         fun factory(container: AppContainer) = viewModelFactory {
-            initializer { LiveViewModel(container.repository, container.listLiveMatches) }
+            initializer { LiveViewModel(container.repository, container.listLiveEvents) }
         }
     }
 }

@@ -30,6 +30,7 @@ class SettingsActivity : AppCompatActivity() {
     private val adapter = HostAdapter(
         object : HostAdapter.Actions {
             override fun onProbe(host: SourceHost) = viewModel.probe(host)
+            override fun onToggleState(host: SourceHost) = viewModel.toggleState(host)
             override fun onMakePrimary(host: SourceHost) = viewModel.setPrimary(host)
             override fun onDelete(host: SourceHost) = viewModel.delete(host)
         }

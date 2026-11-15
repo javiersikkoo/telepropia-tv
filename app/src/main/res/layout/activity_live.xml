@@ -29,24 +29,43 @@
                 android:padding="4dp" />
         </HorizontalScrollView>
 
+        <ProgressBar
+            android:id="@+id/refreshing"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:visibility="invisible" />
+
         <Button
             android:id="@+id/settings_button"
             style="@style/Widget.TelePropia.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:nextFocusDown="@+id/match_list"
+            android:layout_marginStart="12dp"
+            android:nextFocusDown="@+id/event_list"
             android:text="@string/live_settings" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/degraded_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@color/surface"
+        android:padding="12dp"
+        android:textColor="@color/warning"
+        android:textSize="16sp"
+        android:visibility="gone" />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/match_list"
+            android:id="@+id/event_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"

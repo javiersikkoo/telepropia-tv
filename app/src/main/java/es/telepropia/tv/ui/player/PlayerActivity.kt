@@ -30,7 +30,6 @@ import androidx.media3.ui.PlayerView
 import es.telepropia.tv.R
 import es.telepropia.tv.appContainer
 import es.telepropia.tv.data.model.Failure
-import es.telepropia.tv.data.model.Match
 import es.telepropia.tv.data.model.PlaybackSpec
 import es.telepropia.tv.data.model.Sports
 import es.telepropia.tv.ui.messageRes
@@ -42,6 +41,7 @@ class PlayerActivity : AppCompatActivity() {
     private val viewModel: PlayerViewModel by viewModels {
         PlayerViewModel.factory(
             appContainer(),
+            intent.getLongExtra(EXTRA_HOST_ID, NO_HOST),
             requireNotNull(intent.getStringExtra(EXTRA_MATCH_ID)),
             intent.getIntExtra(EXTRA_SPORT_ID, Sports.DEFAULT_ID)
         )
@@ -49,6 +49,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private lateinit var playerView: PlayerView
     private lateinit var buffering: View
+    private lateinit var status: TextView
     private lateinit var errorPanel: View
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
@@ -68,6 +69,7 @@ class PlayerActivity : AppCompatActivity() {
     private val listener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             buffering.isVisible = playbackState == Player.STATE_BUFFERING
+            if (playbackState == Player.STATE_READY) status.isVisible = false
             if (playbackState == Player.STATE_ENDED) viewModel.onStreamEnded()
         }
 
@@ -92,6 +94,7 @@ class PlayerActivity : AppCompatActivity() {
 
         playerView = findViewById(R.id.player_view)
         buffering = findViewById(R.id.buffering)
+        status = findViewById(R.id.status_text)
         errorPanel = findViewById(R.id.error_panel)
         errorText = findViewById(R.id.error_text)
         retryButton = findViewById(R.id.retry_button)
@@ -127,9 +130,11 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun render(state: PlayerState) {
         when (state) {
-            PlayerState.Resolving -> {
+            is PlayerState.Resolving -> {
                 errorPanel.isVisible = false
                 buffering.isVisible = true
+                status.setText(if (state.retrying) R.string.player_retrying else R.string.player_resolving)
+                status.isVisible = true
             }
             is PlayerState.Ready -> {
                 errorPanel.isVisible = false
@@ -151,6 +156,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun showError(failure: Failure) {
         player?.stop()
         buffering.isVisible = false
+        status.isVisible = false
         errorText.setText(failure.messageRes())
         errorPanel.isVisible = true
         retryButton.requestFocus()
@@ -165,14 +171,18 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val EXTRA_HOST_ID = "host_id"
         private const val EXTRA_MATCH_ID = "match_id"
         private const val EXTRA_SPORT_ID = "sport_id"
         private const val NO_TOKEN = -1
+        private const val NO_HOST = -1L
         private const val TIMEOUT_MS = 8_000
         private const val LOAD_RETRIES = 2
 
-        fun intent(context: Context, match: Match): Intent = Intent(context, PlayerActivity::class.java)
-            .putExtra(EXTRA_MATCH_ID, match.matchId)
-            .putExtra(EXTRA_SPORT_ID, match.sportId)
+        fun intent(context: Context, hostId: Long, matchId: String, sportId: Int): Intent =
+            Intent(context, PlayerActivity::class.java)
+                .putExtra(EXTRA_HOST_ID, hostId)
+                .putExtra(EXTRA_MATCH_ID, matchId)
+                .putExtra(EXTRA_SPORT_ID, sportId)
     }
 }

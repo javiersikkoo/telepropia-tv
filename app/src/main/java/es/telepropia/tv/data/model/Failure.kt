@@ -7,6 +7,7 @@ sealed interface Failure {
     data object NotFound : Failure
     data object Upstream : Failure
     data object NoHost : Failure
+    data object NoActiveHost : Failure
     data object Other : Failure
 }
 

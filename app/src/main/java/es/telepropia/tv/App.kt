@@ -6,7 +6,7 @@ import es.telepropia.tv.data.SourceRepository
 import es.telepropia.tv.data.local.AppDatabase
 import es.telepropia.tv.data.local.SettingsStore
 import es.telepropia.tv.data.remote.ResolverClient
-import es.telepropia.tv.domain.ListLiveMatches
+import es.telepropia.tv.domain.ListLiveEvents
 import es.telepropia.tv.domain.ProbeSource
 import es.telepropia.tv.domain.ResolveMatch
 
@@ -26,7 +26,7 @@ class AppContainer(context: Context) {
         settings = SettingsStore(context),
         resolver = ResolverClient()
     )
-    val listLiveMatches = ListLiveMatches(repository)
+    val listLiveEvents = ListLiveEvents(repository)
     val resolveMatch = ResolveMatch(repository)
     val probeSource = ProbeSource(repository)
 }

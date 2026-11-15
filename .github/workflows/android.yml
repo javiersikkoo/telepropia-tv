@@ -36,7 +36,11 @@ jobs:
           echo "Kotlin warnings: $(wc -l < warnings.txt)"
 
       - name: Lint de Android
-        run: ./gradlew lintRelease --stacktrace
+        run: ./gradlew lintRelease
+
+      - name: Avisos de lint en el log
+        if: always()
+        run: find app/build -name 'lint-results-release.txt' -exec cat {} \; || true
 
       - name: Informes
         if: always()

@@ -5,11 +5,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import es.telepropia.tv.R
+import es.telepropia.tv.data.model.HostState
 import es.telepropia.tv.data.model.SourceHost
 import es.telepropia.tv.ui.messageRes
 
@@ -17,6 +19,7 @@ class HostAdapter(private val actions: Actions) : ListAdapter<HostRow, HostAdapt
 
     interface Actions {
         fun onProbe(host: SourceHost)
+        fun onToggleState(host: SourceHost)
         fun onMakePrimary(host: SourceHost)
         fun onDelete(host: SourceHost)
     }
@@ -32,15 +35,31 @@ class HostAdapter(private val actions: Actions) : ListAdapter<HostRow, HostAdapt
 
     class Holder(view: View, private val actions: Actions) : RecyclerView.ViewHolder(view) {
         private val url: TextView = view.findViewById(R.id.host_url)
+        private val state: TextView = view.findViewById(R.id.host_state)
         private val probeResult: TextView = view.findViewById(R.id.probe_result)
         private val probeButton: Button = view.findViewById(R.id.probe_button)
+        private val stateButton: Button = view.findViewById(R.id.state_button)
         private val primaryButton: Button = view.findViewById(R.id.primary_button)
         private val deleteButton: Button = view.findViewById(R.id.delete_button)
 
         fun bind(row: HostRow) {
             val host = row.host
             val context = itemView.context
+            val active = host.state == HostState.ACTIVE
+            val failing = active && row.status.failure != null
+
             url.text = host.baseUrl
+            state.setText(
+                when {
+                    !active -> R.string.host_state_paused
+                    failing -> R.string.host_state_failing
+                    else -> R.string.host_state_active
+                }
+            )
+            state.setTextColor(
+                ContextCompat.getColor(context, if (active && !failing) R.color.accent else R.color.warning)
+            )
+            stateButton.setText(if (active) R.string.host_pause else R.string.host_resume)
             primaryButton.setText(if (host.isPrimary) R.string.host_primary else R.string.host_make_primary)
             primaryButton.isSelected = host.isPrimary
 
@@ -59,6 +78,7 @@ class HostAdapter(private val actions: Actions) : ListAdapter<HostRow, HostAdapt
             }
 
             probeButton.setOnClickListener { actions.onProbe(host) }
+            stateButton.setOnClickListener { actions.onToggleState(host) }
             primaryButton.setOnClickListener { actions.onMakePrimary(host) }
             deleteButton.setOnClickListener { actions.onDelete(host) }
         }

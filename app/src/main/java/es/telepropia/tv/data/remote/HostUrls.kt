@@ -30,6 +30,9 @@ internal object HostUrls {
             .toString()
     }
 
+    // §5 no da nombre de fuente; el host:puerto es lo único que distingue un resolver de otro.
+    fun label(baseUrl: String): String = baseUrl.substringAfter("://")
+
     fun endpoint(baseUrl: String, path: String, query: List<Pair<String, String>>): HttpUrl? {
         val base = baseUrl.toHttpUrlOrNull() ?: return null
         val builder = base.newBuilder().encodedPath("/").addPathSegments(path)

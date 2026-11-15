@@ -191,6 +191,57 @@ Coste: ninguno.
 re-resuelve. Alternativa descartada: pausar y reanudar con la misma URL, que
 puede haber caducado. Coste: Home no retoma el partido.
 
+## 2026-11-15 — Los hosts dejan de conmutar y pasan a agregar
+
+Se piden todos los hosts activos en paralelo y se fusiona por nombre y deporte
+normalizados; el que falla se pausa en memoria y se excluye, sin borrarse.
+`resolve()` va al host de la fuente elegida. Sustituye el §9 de conmutación.
+
+Alternativa descartada: conmutación al primario caído. Coste: una petición por
+host en cada refresco, y el mismo evento aparece con calidades distintas.
+
+## 2026-11-15 — Alta de sitios por script, un proceso y un puerto por sitio
+
+Cada sitio es un resolver propio, levantado por script fuera de la app, con su
+proceso y su puerto. La app solo ve hosts.
+
+Alternativa descartada: alta de sitios dentro de la app. Coste: los resolvers
+viven fuera y hay que mantenerlos aparte.
+
+## 2026-11-15 — `sourceName` sale del host:puerto
+
+§5 no da nombre de fuente ni `SourceHost` lo tiene. Se pinta `host:puerto`.
+Alternativa descartada: inventar un campo de etiqueta sin pedirlo.
+Coste: en pantalla se ve una IP; pendiente de confirmar si se añade etiqueta.
+
+## 2026-11-15 — Host caído: excluido, pero sus eventos se marcan
+
+Casa §9 ("se excluye") con §7 ("evento sin fuentes vivas se marca"). La última
+lista buena del host caído se guarda en memoria; sus eventos salen marcados y
+sin abrir, y nunca se resuelve contra él. Espera de 5 min antes de volver a
+pedirle; "Probar" con OK o reactivarlo lo devuelve antes. Coste: un host
+intermitente entra y sale de la lista.
+
+## 2026-11-15 — Modo degradado y reintento F2
+
+Con algún host activo caído, banner "N de M hosts sin respuesta". El reintento
+re-resuelve una vez también para 404, 502 y timeout; sin red no se reintenta.
+Solo `/api/live` pausa hosts; un fallo de `resolve()` es del partido, no del
+host. Alternativa descartada: pausar también en `resolve()`. Coste: un host que
+lista pero no resuelve sigue en la lista.
+
+## 2026-11-15 — DataStore deja de guardar host activo
+
+§6 lo pide, pero con agregación no hay un host activo: hay estado por host en
+Room. DataStore guarda solo el deporte. Alternativa descartada: mantener la
+clave sin uso. Coste: §6 queda desfasado en esa línea hasta que se parchee.
+
+## 2026-11-15 — Room v2 con migración
+
+`state` entra como columna `TEXT NOT NULL DEFAULT 'ACTIVE'`; los hosts de F1 se
+conservan. Alternativa descartada: `fallbackToDestructiveMigration`, que borra
+los hosts. Coste: una migración que mantener.
+
 ---
 
 ## Derogadas
