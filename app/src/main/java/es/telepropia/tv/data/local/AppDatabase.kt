@@ -13,9 +13,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun hostDao(): SourceHostDao
 
     companion object {
-        fun build(context: Context): AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, "telepropia.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-            .build()
+        fun build(context: Context): AppDatabase {
+            val builder = Room.databaseBuilder(context, AppDatabase::class.java, "telepropia.db")
+            return builder.addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        }
 
         // Los hosts dados de alta en F1 no se pierden al actualizar: entran todos como activos.
         private val MIGRATION_1_2 = object : Migration(1, 2) {
