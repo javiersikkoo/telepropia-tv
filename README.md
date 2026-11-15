@@ -17,7 +17,9 @@ demás.
 ### 1. Consigue el APK
 
 - **Versión publicada:** en GitHub, pestaña **Releases**, fichero
-  `telepropia-vX.Y.Z.apk`.
+  `telepropia.apk`. Con el repo público, Downloader lo baja directo de
+  `https://github.com/javiersikkoo/telepropia-tv/releases/latest/download/telepropia.apk`
+  y puedes saltarte el paso 2.
 - **Último build:** pestaña **Actions** → la ejecución más reciente en verde →
   artefacto `telepropia-release-firma-definitiva` → `app-universal-release.apk`.
 

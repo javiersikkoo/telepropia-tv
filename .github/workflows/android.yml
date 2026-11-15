@@ -161,6 +161,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Nombre fijo además del versionado: .../releases/latest/download/telepropia.apk no cambia nunca.
+          cp apk/app-universal-release.apk apk/telepropia.apk
           cp apk/app-universal-release.apk "apk/telepropia-${GITHUB_REF_NAME}.apk"
           gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --title "TelePropia $GITHUB_REF_NAME" \
-            --generate-notes "apk/telepropia-${GITHUB_REF_NAME}.apk" apk/app-*-release.apk
+            --generate-notes apk/telepropia.apk "apk/telepropia-${GITHUB_REF_NAME}.apk"
