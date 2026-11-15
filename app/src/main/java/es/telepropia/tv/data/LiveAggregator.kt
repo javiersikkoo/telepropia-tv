@@ -17,7 +17,8 @@ internal class LiveAggregator(
     private val clock: () -> Long
 ) {
     // Última lista buena de cada host, solo en memoria: con ella se marcan los eventos de un host caído.
-    private val lastLive = ConcurrentHashMap<Pair<Long, Int>, List<Match>>()
+    // Tipada como MutableMap: el keySet propio de ConcurrentHashMap no existe por debajo de API 24.
+    private val lastLive: MutableMap<Pair<Long, Int>, List<Match>> = ConcurrentHashMap()
 
     suspend fun fetch(hosts: List<SourceHost>, sportId: Int): Outcome<HostFetch> {
         if (hosts.isEmpty()) return Outcome.Err(Failure.NoHost)
