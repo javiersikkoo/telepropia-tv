@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TelePropia</title>
+  </head>
+  <body>
+    <section id="view-live" class="view" aria-label="Partidos en vivo">
+      <header class="bar">
+        <nav id="sports" class="chips" aria-label="Deportes"></nav>
+        <span id="refreshing" class="spinner small" aria-label="Actualizando" hidden></span>
+        <button id="open-settings" class="btn">Ajustes</button>
+      </header>
+      <div id="degraded" class="banner" role="status" hidden></div>
+      <main class="body">
+        <ul id="events" class="list" aria-label="Eventos en vivo"></ul>
+        <div id="live-loading" class="center"><span class="spinner"></span></div>
+        <div id="live-message" class="center message" role="status" hidden>
+          <p id="live-message-text"></p>
+          <button id="live-retry" class="btn" hidden>Reintentar</button>
+        </div>
+      </main>
+    </section>
+
+    <section id="view-sources" class="view" aria-label="Fuentes" hidden>
+      <header class="bar">
+        <button class="btn back" title="Volver (Esc)">← Volver</button>
+        <h1 id="sources-title"></h1>
+      </header>
+      <main class="body">
+        <p class="hint">Elige fuente</p>
+        <ul id="sources" class="list" aria-label="Fuentes del evento"></ul>
+      </main>
+    </section>
+
+    <section id="view-player" class="view player" aria-label="Reproductor" hidden>
+      <video id="video" playsinline></video>
+      <div id="player-top" class="player-top">
+        <button class="btn back" title="Volver (Esc)">← Volver</button>
+        <span id="player-title"></span>
+        <span class="keys">Espacio: pausa · F: pantalla completa · Esc: volver</span>
+      </div>
+      <div id="player-status" class="player-status" role="status">
+        <span class="spinner"></span>
+        <span id="player-status-text"></span>
+      </div>
+      <div id="player-error" class="player-error" role="alert" hidden>
+        <p id="player-error-text"></p>
+        <button id="player-retry" class="btn">Reintentar</button>
+      </div>
+    </section>
+
+    <section id="view-settings" class="view" aria-label="Ajustes" hidden>
+      <header class="bar">
+        <button class="btn back" title="Volver (Esc)">← Volver</button>
+        <h1>Ajustes</h1>
+      </header>
+      <main class="body">
+        <p id="first-run" class="hint" hidden>Hace falta el host del resolver para ver partidos.</p>
+        <form id="add-form" class="add">
+          <input id="host-input" placeholder="http://192.168.1.10:3000" autocomplete="off" spellcheck="false"
+            aria-label="Dirección del resolver" />
+          <input id="label-input" placeholder="Etiqueta (opcional)" autocomplete="off" aria-label="Etiqueta" />
+          <button type="submit" class="btn primary">Añadir</button>
+        </form>
+        <p id="settings-status" class="hint" role="status"></p>
+        <h2>Hosts del resolver</h2>
+        <ul id="hosts" class="list hosts" aria-label="Hosts del resolver"></ul>
+        <p id="no-hosts" class="hint" hidden>Todavía no hay hosts.</p>
+      </main>
+    </section>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

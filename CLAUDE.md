@@ -196,3 +196,24 @@ falla uno de los tres, la fase no está cerrada aunque reproduzca.
 
 Xtream, EPG, canales, categorías, estanterías, paginación, búsqueda, WebView,
 grabación, timeshift, PiP, multiventana, Compose, telemetría.
+
+## §13 Escritorio (Windows y Mac)
+
+Cliente de escritorio en `desktop/`, en este mismo repo. Hace exactamente lo
+mismo que la app de TV: hosts con etiqueta, estado y orden; agregación de §9;
+elección de fuente; mapeo de errores y reintento de §8; modo degradado; refresco
+de §6. Se maneja con teclado y ratón. Uso personal.
+
+- Tauri 2 con HTML y JS sin framework; hls.js para reproducir. Sin telemetría.
+- El contrato es el de §5, sin cambios. Cero cadenas de dominio en el código.
+- Las peticiones al resolver y la carga de HLS van por el cliente HTTP de Tauri:
+  el resolver es código ajeno y no manda cabeceras CORS.
+- Hosts y deporte se guardan en el almacenamiento local de la app. No se
+  sincronizan con la TV.
+- Instaladores sin firma de pago: `.exe` para Windows y `.dmg` universal para
+  Mac con firma ad hoc. Los avisos de instalación se aceptan.
+- Esc vuelve un paso en todas las vistas. En el reproductor, espacio pausa y F
+  pone pantalla completa.
+
+Cierre: tests del núcleo, recorrido E2E en navegador contra resolvers falsos,
+instaladores generados por el CI, y prueba manual en cada sistema.

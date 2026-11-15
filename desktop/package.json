@@ -1,0 +1,23 @@
+{
+  "name": "telepropia-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test test/*.test.js",
+    "e2e": "node e2e/run.mjs",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-http": "^2.9.0",
+    "hls.js": "^1.7.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4",
+    "playwright": "1.65.1",
+    "vite": "^8.3.8"
+  }
+}

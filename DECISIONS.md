@@ -319,6 +319,34 @@ El repo es privado: Downloader no puede bajar de GitHub. El README sirve el APK
 con `python3 -m http.server` en la LAN. Alternativa descartada: alojar el APK
 en público. Coste: un paso más en cada actualización.
 
+## 2026-11-15 — Cliente de escritorio con Tauri, en el mismo repo
+
+Windows y Mac a la vez, con las mismas funciones que la TV y manejo con teclado
+y ratón. Tauri 2 con HTML y JS, hls.js para el vídeo. Alternativas descartadas:
+Compose Desktop (Compose vetado en §1 y HLS en la JVM exige VLC) y web o PWA
+(sin CORS en el resolver). Coste: un segundo núcleo en JS que hay que mantener
+a la par que el de Kotlin.
+
+## 2026-11-15 — Instaladores de escritorio sin firma de pago
+
+Uso personal. `.exe` sin firmar y `.dmg` con firma ad hoc. Alternativa
+descartada: Apple Developer (99 $/año) y certificado de Windows. Coste: aviso de
+SmartScreen y, en Mac, "Abrir igualmente" en Privacidad y seguridad la primera
+vez.
+
+## 2026-11-15 — HTTP de Tauri y cargador propio de hls.js
+
+El resolver no manda CORS, así que el `fetch` del webview no sirve. Todas las
+peticiones, también playlist y segmentos, van por el cliente HTTP de Tauri con
+un cargador propio para hls.js. Coste: en un navegador normal la interfaz solo
+funciona contra servidores con CORS, como los resolvers falsos de los tests.
+
+## 2026-11-15 — E2E de escritorio en Chromium con vídeo VP9
+
+El Chromium de Playwright no trae H.264, así que el recorrido usa HLS en VP9.
+Alternativa descartada: no probar la reproducción. Coste: el H.264 real solo se
+valida en WebView2 y WKWebView en la prueba manual.
+
 ---
 
 ## Derogadas

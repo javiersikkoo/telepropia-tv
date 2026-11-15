@@ -28,6 +28,11 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def end_headers(self):
+        # Solo para el E2E de escritorio en navegador; un resolver real no lo manda y la app no lo necesita.
+        self.send_header("Access-Control-Allow-Origin", "*")
+        super().end_headers()
+
     def _file(self, path, ctype):
         if not os.path.isfile(path):
             return self._json(404, {"error": "no existe"})
@@ -70,8 +75,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._file(os.path.join(HLS_DIR, "index.m3u8"), "application/vnd.apple.mpegurl")
 
         name = os.path.basename(url.path)
-        if name.endswith(".ts"):
-            return self._file(os.path.join(HLS_DIR, name), "video/mp2t")
+        types = {".ts": "video/mp2t", ".m4s": "video/iso.segment", ".mp4": "video/mp4"}
+        ext = os.path.splitext(name)[1]
+        if ext in types:
+            return self._file(os.path.join(HLS_DIR, name), types[ext])
         return self._json(404, {"error": "ruta desconocida"})
 
 

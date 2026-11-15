@@ -75,6 +75,26 @@ vuelve a dar de alta los hosts.
 
 ---
 
+## Escritorio: Windows y Mac
+
+La misma app para ordenador, con teclado y ratón. Comparte el funcionamiento
+con la de TV, pero no los datos: los hosts se dan de alta en cada aparato.
+
+Descarga desde la última versión de **Releases**:
+
+- **Windows:** `TelePropia-Windows.exe`. Al abrirlo, Windows avisa de que la
+  app no es de un editor conocido: **Más información → Ejecutar de todas
+  formas**. Se instala solo para tu usuario, sin pedir permisos de administrador.
+- **Mac:** `TelePropia-Mac.dmg`, que funciona en Intel y en Apple Silicon.
+  Arrastra TelePropia a Aplicaciones. La primera vez, macOS la bloquea porque
+  no está firmada por Apple: Ajustes del Sistema → Privacidad y seguridad →
+  **Abrir igualmente**, y confirma.
+
+Teclas: **Esc** vuelve atrás desde cualquier pantalla; en el reproductor,
+**Espacio** pausa y **F** (o doble clic) pone pantalla completa.
+
+---
+
 ## Uso con el mando
 
 - **Arriba:** fila de deportes. Pulsa uno para filtrar.
@@ -134,8 +154,12 @@ Cada push a `main` ejecuta:
    y arranque en frío por debajo de 3 s. Las capturas quedan en el artefacto
    `capturas-e2e`.
 
+3. **Escritorio:** tests del núcleo, recorrido E2E en Chromium contra los mismos
+   resolvers falsos y compilación de los instaladores en Windows y en Mac.
+
 Para publicar una versión: Actions → Android CI → Run workflow → `version` = `vX.Y.Z`.
-Sale en Releases como `telepropia.apk` (nombre fijo) y `telepropia-vX.Y.Z.apk`.
+Sale en Releases con `telepropia.apk`, `telepropia-vX.Y.Z.apk`, `TelePropia-Windows.exe`
+y `TelePropia-Mac.dmg`.
 
 Las reglas del proyecto están en `CLAUDE.md` y las decisiones en
 `DECISIONS.md`.
