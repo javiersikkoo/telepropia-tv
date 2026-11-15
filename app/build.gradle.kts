@@ -8,7 +8,8 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
-// La clave nunca entra en el repo: viene de keystore.properties (local, ignorado por git) o de variables de entorno (CI).
+// La clave nunca entra en el repo: viene de keystore.properties (local, ignorado por git)
+// o de variables de entorno (CI).
 val signingProps = Properties().apply {
     val file = rootProject.file("keystore.properties")
     if (file.exists()) file.inputStream().use { load(it) }
