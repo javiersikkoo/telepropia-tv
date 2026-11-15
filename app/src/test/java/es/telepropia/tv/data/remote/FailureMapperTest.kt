@@ -1,11 +1,11 @@
 package es.telepropia.tv.data.remote
 
 import es.telepropia.tv.data.model.Failure
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class FailureMapperTest {
 

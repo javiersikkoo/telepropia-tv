@@ -4,13 +4,13 @@ import es.telepropia.tv.data.model.Failure
 import es.telepropia.tv.data.model.Match
 import es.telepropia.tv.data.model.Outcome
 import es.telepropia.tv.data.model.PlaybackSpec
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 class ResolverClient(private val http: OkHttpClient = defaultHttpClient()) {
 
