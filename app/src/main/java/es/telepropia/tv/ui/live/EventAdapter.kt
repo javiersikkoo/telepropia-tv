@@ -60,8 +60,7 @@ class EventAdapter(private val onOpen: (LiveEvent) -> Unit) : ListAdapter<EventR
 }
 
 private object EventDiff : DiffUtil.ItemCallback<EventRow>() {
-    override fun areItemsTheSame(oldItem: EventRow, newItem: EventRow): Boolean =
-        oldItem.event.key == newItem.event.key
+    override fun areItemsTheSame(oldItem: EventRow, newItem: EventRow): Boolean = oldItem.event.key == newItem.event.key
 
     override fun areContentsTheSame(oldItem: EventRow, newItem: EventRow): Boolean = oldItem == newItem
 }

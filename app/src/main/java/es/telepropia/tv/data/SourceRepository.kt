@@ -72,8 +72,7 @@ class SourceRepository(
         aggregator.forget(id)
     }
 
-    suspend fun fetchLive(sportId: Int): Outcome<HostFetch> =
-        aggregator.fetch(dao.all().map { it.toModel() }, sportId)
+    suspend fun fetchLive(sportId: Int): Outcome<HostFetch> = aggregator.fetch(dao.all().map { it.toModel() }, sportId)
 
     // PlaybackSpec no se guarda en ningún sitio: cada play pasa por aquí, y siempre contra el host de la fuente.
     suspend fun resolve(hostId: Long, matchId: String, sportId: Int): Outcome<PlaybackSpec> {
