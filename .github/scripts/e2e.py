@@ -279,9 +279,10 @@ def pause_first_keeps_event_with_second():
     wait_text("En pausa")
     back_to_list()
     tap(with_text("Fútbol")[0])
-    wait_text("Team A vs Team B", 40)
+    # Sin el primer host, el evento toma el nombre que da el segundo.
+    wait_text("TEAM A - Team B", 40)
     row = [n for n in nodes() if n.get("focusable") == "true" and any(
-        "Team A" in (d.get("text") or "") for d in n.iter("node"))][0]
+        "team a" in (d.get("text") or "").lower() for d in n.iter("node"))][0]
     row_texts = [d.get("text") for d in row.iter("node") if d.get("text")]
     assert "1 fuente" in row_texts, row_texts
     assert not with_text("Team C vs Team D"), "Team C solo está en el host pausado"
