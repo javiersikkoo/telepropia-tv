@@ -162,13 +162,19 @@ jobs:
           path: apk
           merge-multiple: true
 
+      - name: Limpieza puntual de la versión publicada por error como "main"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete main -R "$GITHUB_REPOSITORY" --cleanup-tag -y || true
+
       - name: Publicar versión
         env:
           GH_TOKEN: ${{ github.token }}
-          GITHUB_REF_NAME: ${{ inputs.version || github.ref_name }}
+          # GITHUB_REF_NAME es de GitHub y no se puede sobrescribir: la versión va en su propia variable.
+          VERSION: ${{ inputs.version || github.ref_name }}
         run: |
           # Nombre fijo además del versionado: .../releases/latest/download/telepropia.apk no cambia nunca.
           cp apk/app-universal-release.apk apk/telepropia.apk
-          cp apk/app-universal-release.apk "apk/telepropia-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --title "TelePropia $GITHUB_REF_NAME" \
-            --target "$GITHUB_SHA" --generate-notes apk/telepropia.apk "apk/telepropia-${GITHUB_REF_NAME}.apk"
+          cp apk/app-universal-release.apk "apk/telepropia-${VERSION}.apk"
+          gh release create "$VERSION" -R "$GITHUB_REPOSITORY" --title "TelePropia $VERSION" \
+            --target "$GITHUB_SHA" --generate-notes apk/telepropia.apk "apk/telepropia-${VERSION}.apk"
