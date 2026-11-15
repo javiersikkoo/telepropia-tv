@@ -63,9 +63,11 @@ HTTP ni Room.
 Sport(id: Int, label: String)
 Match(matchId: String, sportId: Int, name: String, sourceHostId: Long, sourceName: String)
 PlaybackSpec(url: String, referer: String?)
-SourceHost(id: Long, baseUrl: String, isPrimary: Boolean, state: ACTIVE|PAUSED)
+SourceHost(id: Long, baseUrl: String, label: String?, state: ACTIVE|PAUSED)
 SourceHealth(ok: Boolean, latencyMs: Long, failure: Failure?)
 ```
+
+El orden de los hosts es el de la lista en ajustes; no hay primario.
 
 `PlaybackSpec` **no se cachea nunca**. Se resuelve en el momento del play. Las
 URLs caducan y una caché solo produce 403.
@@ -108,8 +110,9 @@ Deportes: 1 fútbol, 2 baloncesto, 3 tenis, 4 béisbol, 6 críquet, 7 motor,
 
 ## §6 Persistencia
 
-- Room: `SourceHost`. Sin caché de catálogo (la lista se pide viva).
-- DataStore: host activo y deporte activo.
+- Room: `SourceHost` (host del resolver, etiqueta, estado y orden). Sin caché
+  de catálogo (la lista se pide viva).
+- DataStore: deporte activo.
 - Al primer arranque, si no hay hosts, se abre ajustes con el campo vacío y un
   texto de una línea explicando que hace falta el host del resolver.
 - La lista se refresca cada 60 s mientras está en primer plano, y al volver del
@@ -122,7 +125,8 @@ Deportes: 1 fútbol, 2 baloncesto, 3 tenis, 4 béisbol, 6 críquet, 7 motor,
    fuente. Un evento sin fuentes vivas se marca y no se puede abrir. Refresco
    automático. Estado vacío propio.
 2. **Reproductor.**
-3. **Ajustes.** Lista de hosts, alta, borrado, marcar primario, botón probar.
+3. **Ajustes.** Lista de hosts, alta con etiqueta opcional, editar etiqueta,
+   borrado, subir y bajar en la lista, activar o pausar, botón probar.
 
 Navegación completa con D-pad, foco visible en todo, BACK en un solo paso en
 todas.

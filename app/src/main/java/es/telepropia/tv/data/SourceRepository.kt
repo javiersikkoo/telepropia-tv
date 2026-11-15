@@ -37,7 +37,7 @@ class SourceRepository(
     private val aggregator = LiveAggregator(resolver::live, pauses, clock)
 
     val hostStatuses: Flow<List<HostStatus>> = combine(dao.observeAll(), pauses.current) { rows, paused ->
-        rows.map { it.toModel() }.primaryFirst().map { HostStatus(it, paused[it.id]?.failure) }
+        rows.map { HostStatus(it.toModel(), paused[it.id]?.failure) }
     }
 
     val activeSportId: Flow<Int> = settings.activeSportId
@@ -46,16 +46,27 @@ class SourceRepository(
 
     suspend fun hasHosts(): Boolean = dao.count() > 0
 
-    suspend fun addHost(raw: String): AddHostResult {
+    suspend fun addHost(raw: String, label: String?): AddHostResult {
         val baseUrl = HostUrls.normalize(raw) ?: return AddHostResult.Invalid
-        val id = dao.insert(SourceHostEntity(baseUrl = baseUrl, isPrimary = false))
+        val entity = SourceHostEntity(baseUrl = baseUrl, label = cleanLabel(label), position = dao.maxPosition() + 1)
+        val id = dao.insert(entity)
         if (id == -1L) return AddHostResult.Duplicate
-        if (dao.primary() == null) dao.markPrimary(id)
         val host = dao.byId(id)?.toModel() ?: return AddHostResult.Invalid
         return AddHostResult.Added(host)
     }
 
-    suspend fun setPrimary(id: Long) = dao.markPrimary(id)
+    suspend fun setLabel(id: Long, label: String?) = dao.setLabel(id, cleanLabel(label))
+
+    suspend fun move(id: Long, delta: Int) {
+        db.withTransaction {
+            val order = dao.all().toMutableList()
+            val from = order.indexOfFirst { it.id == id }
+            val to = from + delta
+            if (from < 0 || to !in order.indices) return@withTransaction
+            order.add(to, order.removeAt(from))
+            order.forEachIndexed { index, host -> if (host.position != index) dao.setPosition(host.id, index) }
+        }
+    }
 
     suspend fun setState(id: Long, state: HostState) {
         dao.setState(id, state.name)
@@ -63,11 +74,7 @@ class SourceRepository(
     }
 
     suspend fun deleteHost(id: Long) {
-        db.withTransaction {
-            val wasPrimary = dao.byId(id)?.isPrimary == true
-            dao.delete(id)
-            if (wasPrimary) dao.all().firstOrNull()?.let { dao.markPrimary(it.id) }
-        }
+        dao.delete(id)
         pauses.resume(id)
         aggregator.forget(id)
     }
@@ -95,4 +102,6 @@ class SourceRepository(
             }
         }
     }
+
+    private fun cleanLabel(raw: String?): String? = raw?.trim()?.takeIf { it.isNotEmpty() }
 }

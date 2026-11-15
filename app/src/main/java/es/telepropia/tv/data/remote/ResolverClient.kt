@@ -16,7 +16,7 @@ import okhttp3.Request
 class ResolverClient(private val http: OkHttpClient = defaultHttpClient()) {
 
     suspend fun live(host: SourceHost, sportId: Int): Outcome<List<Match>> {
-        val sourceName = HostUrls.label(host.baseUrl)
+        val sourceName = host.label?.takeIf { it.isNotBlank() } ?: HostUrls.label(host.baseUrl)
         return get(host.baseUrl, "api/live", listOf("sportType" to sportId.toString())) { body ->
             ResolverJson.decodeFromString(LiveResponseDto.serializer(), body).matches
                 .map { it.toModel(host.id, sourceName) }

@@ -1,6 +1,5 @@
 package es.telepropia.tv.data.local
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -11,15 +10,14 @@ import es.telepropia.tv.data.model.SourceHost
 data class SourceHostEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val baseUrl: String,
-    val isPrimary: Boolean,
-    @ColumnInfo(defaultValue = STATE_ACTIVE) val state: String = STATE_ACTIVE
+    val label: String? = null,
+    val position: Int,
+    val state: String = HostState.ACTIVE.name
 )
-
-internal const val STATE_ACTIVE = "ACTIVE"
 
 internal fun SourceHostEntity.toModel(): SourceHost = SourceHost(
     id = id,
     baseUrl = baseUrl,
-    isPrimary = isPrimary,
+    label = label,
     state = HostState.entries.firstOrNull { it.name == state } ?: HostState.ACTIVE
 )

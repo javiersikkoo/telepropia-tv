@@ -41,7 +41,3 @@ internal class HostPauses(private val cooldownMs: Long = DEFAULT_COOLDOWN_MS) {
         const val DEFAULT_COOLDOWN_MS = 5 * 60_000L
     }
 }
-
-internal fun List<SourceHost>.primaryFirst(): List<SourceHost> = sortedWith(
-    compareByDescending<SourceHost> { it.isPrimary }.thenBy { it.id }
-)

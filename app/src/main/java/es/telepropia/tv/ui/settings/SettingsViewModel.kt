@@ -31,6 +31,7 @@ sealed interface ProbeUi {
 
 data class HostRow(val status: HostStatus, val probe: ProbeUi) {
     val host: SourceHost get() = status.host
+    val displayName: String get() = host.label ?: host.baseUrl.substringAfter("://")
 }
 
 data class Feedback(@StringRes val textRes: Int, val clearInput: Boolean)
@@ -49,9 +50,9 @@ class SettingsViewModel(
     private val _feedback = MutableStateFlow<Feedback?>(null)
     val feedback: StateFlow<Feedback?> = _feedback.asStateFlow()
 
-    fun add(raw: String) {
+    fun add(raw: String, label: String) {
         viewModelScope.launch {
-            when (val result = repository.addHost(raw)) {
+            when (val result = repository.addHost(raw, label)) {
                 is AddHostResult.Added -> {
                     _feedback.value = Feedback(R.string.settings_added, clearInput = true)
                     probe(result.host)
@@ -66,8 +67,12 @@ class SettingsViewModel(
         _feedback.update { it?.copy(clearInput = false) }
     }
 
-    fun setPrimary(host: SourceHost) {
-        viewModelScope.launch { repository.setPrimary(host.id) }
+    fun setLabel(host: SourceHost, label: String) {
+        viewModelScope.launch { repository.setLabel(host.id, label) }
+    }
+
+    fun move(host: SourceHost, delta: Int) {
+        viewModelScope.launch { repository.move(host.id, delta) }
     }
 
     fun toggleState(host: SourceHost) {

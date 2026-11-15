@@ -22,7 +22,8 @@ internal class LiveAggregator(
 
     suspend fun fetch(hosts: List<SourceHost>, sportId: Int): Outcome<HostFetch> {
         if (hosts.isEmpty()) return Outcome.Err(Failure.NoHost)
-        val active = hosts.filter { it.state == HostState.ACTIVE }.primaryFirst()
+        // El orden de entrada es el de ajustes y es la prioridad de las fuentes dentro de cada evento.
+        val active = hosts.filter { it.state == HostState.ACTIVE }
         if (active.isEmpty()) return Outcome.Err(Failure.NoActiveHost)
 
         val now = clock()

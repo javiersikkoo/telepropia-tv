@@ -17,7 +17,7 @@ enum class HostState { ACTIVE, PAUSED }
 data class SourceHost(
     val id: Long,
     val baseUrl: String,
-    val isPrimary: Boolean,
+    val label: String? = null,
     val state: HostState = HostState.ACTIVE
 )
 

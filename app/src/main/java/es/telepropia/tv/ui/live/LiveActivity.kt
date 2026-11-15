@@ -128,7 +128,7 @@ class LiveActivity : AppCompatActivity() {
     private fun showDegraded(degraded: Degraded?) {
         banner.isVisible = degraded != null
         if (degraded != null) {
-            banner.text = getString(R.string.live_degraded, degraded.failing, degraded.active)
+            banner.text = resources.getQuantityString(R.plurals.live_degraded, degraded.active, degraded.failing, degraded.active)
         }
     }
 

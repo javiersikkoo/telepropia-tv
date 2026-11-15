@@ -212,7 +212,7 @@ viven fuera y hay que mantenerlos aparte.
 
 §5 no da nombre de fuente ni `SourceHost` lo tiene. Se pinta `host:puerto`.
 Alternativa descartada: inventar un campo de etiqueta sin pedirlo.
-Coste: en pantalla se ve una IP; pendiente de confirmar si se añade etiqueta.
+Coste: en pantalla se ve una IP. Resuelto con la entrada de la etiqueta.
 
 ## 2026-11-15 — Host caído: excluido, pero sus eventos se marcan
 
@@ -242,9 +242,54 @@ clave sin uso. Coste: §6 queda desfasado en esa línea hasta que se parchee.
 conservan. Alternativa descartada: `fallbackToDestructiveMigration`, que borra
 los hosts. Coste: una migración que mantener.
 
+## 2026-11-15 — `SourceHost` lleva etiqueta editable
+
+Campo `label` opcional, visible en el selector de fuentes; vacío se pinta
+`host:puerto`.
+
+Alternativa descartada: elegir fuente por IP. Coste: un campo más en alta y
+ajustes.
+
+## 2026-11-15 — Un host que falla la lista queda fuera 5 minutos
+
+Backoff fijo. `probe()` con OK o reactivarlo a mano lo devuelve antes. Solo
+pausa el fallo de la lista, nunca el de `resolve()`.
+
+Alternativa descartada: pausar también por fallo de resolución. Se descarta
+porque un partido roto tiraría el sitio entero.
+
+Coste: hasta 5 minutos sin ese host aunque se arregle solo.
+
+## 2026-11-15 — "Marcar primario" pasa a subir y bajar
+
+Sin `isPrimary`, §7 se queda sin forma de fijar la prioridad. Ajustes ordena
+con Subir y Bajar; Room guarda `position`. Alternativa descartada: ordenar por
+fecha de alta sin poder cambiarla. Coste: dos botones más por host.
+
+## 2026-11-15 — Room v3 recrea la tabla
+
+Quitar `isPrimary` y añadir `label` y `position` exige recrear la tabla:
+SQLite no borra columnas antes de Android 14. La migración conserva los hosts y
+pone el antiguo primario el primero. Coste: SQL a mano que debe calcar el que
+genera Room; el CI lo compara.
+
+## 2026-11-15 — Banner del launcher en PNG 320×180
+
+El vector daba aviso de tamaño y en Fire OS el banner sale recortado o con
+bandas. PNG de 320×180 px en `drawable-xhdpi`, con el nombre de la app.
+Alternativa descartada: vector. Coste: un binario en el repo.
+
 ---
 
 ## Derogadas
+
+## 2026-11-15 — Derogada: `isPrimary`
+
+Con agregación sobra. El orden de la lista en ajustes es la prioridad dentro
+de cada evento.
+
+Alternativa descartada: conservarlo como desempate. Coste: ninguna, el orden
+de lista ya desempata.
 
 ## 2026-11-15 — Derogada: semilla M3U de TDTChannels
 

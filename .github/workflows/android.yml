@@ -35,6 +35,9 @@ jobs:
           if [ -s warnings.txt ]; then cat warnings.txt >> "$GITHUB_STEP_SUMMARY"; else echo "Ninguno" >> "$GITHUB_STEP_SUMMARY"; fi
           echo "Kotlin warnings: $(wc -l < warnings.txt)"
 
+      - name: SQL de la migración igual que el de Room
+        run: python3 .github/scripts/check_room_sql.py
+
       - name: Lint de Android
         run: ./gradlew lintRelease
 
